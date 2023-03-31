@@ -15,6 +15,8 @@ import ArrowBackTwoToneIcon from '@mui/icons-material/ArrowBackTwoTone';
 import ArrowForwardTwoToneIcon from '@mui/icons-material/ArrowForwardTwoTone';
 import UploadTwoToneIcon from '@mui/icons-material/UploadTwoTone';
 import MoreHorizTwoToneIcon from '@mui/icons-material/MoreHorizTwoTone';
+import axios from 'axios';
+import { useState } from 'react';
 
 const Input = styled('input')({
   display: 'none'
@@ -79,6 +81,39 @@ const CardCoverAction = styled(Box)(
 );
 
 const ProfileCover = ({ user }) => {
+  const [image, setImage] = useState<string>("")
+  const [avatar, setAvatar] = useState<string>("")
+  const handleUploadImage = async (body: any, type: any) => {
+    axios
+      .post('http://192.168.1.249:8080/upload-file', body, {
+        headers: {
+          "content-type": "multipart/form-data",
+        },
+      })
+      .then(function (response: any) {
+        if (type === "cover") {
+          setImage(response?.data?.files?.location)
+        } else {
+          setAvatar(response?.data?.files?.location)
+        }
+
+      })
+      .catch(function (error) {
+        return error;
+      });
+  };
+  const handleUploadFile = (e: any, type: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.target.files && e.target.files[0]) {
+      const body = {
+        file: e?.target?.files[0],
+      };
+      handleUploadImage(body, type);
+    }
+  }
+
   return (
     <>
       <Box display="flex" mb={3}>
@@ -97,9 +132,9 @@ const ProfileCover = ({ user }) => {
         </Box>
       </Box>
       <CardCover>
-        <CardMedia image={user.coverImg} />
+        <CardMedia image={image || user.coverImg} />
         <CardCoverAction>
-          <Input accept="image/*" id="change-cover" multiple type="file" />
+          <Input accept="image/*" onChange={(e: any) => handleUploadFile(e, "cover")} id="change-cover" multiple type="file" />
           <label htmlFor="change-cover">
             <Button
               startIcon={<UploadTwoToneIcon />}
@@ -112,13 +147,14 @@ const ProfileCover = ({ user }) => {
         </CardCoverAction>
       </CardCover>
       <AvatarWrapper>
-        <Avatar variant="rounded" alt={user.name} src={user.avatar} />
+        <Avatar variant="rounded" alt={user.name} src={avatar || user.avatar} />
         <ButtonUploadWrapper>
           <Input
             accept="image/*"
             id="icon-button-file"
             name="icon-button-file"
             type="file"
+            onChange={(e: any) => handleUploadFile(e, "isAvatar")}
           />
           <label htmlFor="icon-button-file">
             <IconButton component="span" color="primary">
